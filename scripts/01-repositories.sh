@@ -76,8 +76,8 @@ run_with_progress() {
 clear
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    DEBIAN POST-INSTALL                      ║"
-echo "║              Configurador de Repositórios                   ║"
+echo "║                    DEBIAN POST-INSTALL                       ║"
+echo "║              Configurador de Repositórios                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
