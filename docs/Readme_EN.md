@@ -8,19 +8,19 @@ A script to automate Debian's post-installation setup, adding repositories, inst
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Compatibility](#compatibility)
-- [Roadmap](#roadmap)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [How It Works](#how-it-works)
-- [Requirements](#requirements)
-- [Contributing](#contributing)
-- [Known Issues](#known-issues)
-- [Useful Resources](#useful-resources)
-- [License](#license)
-- [Author](#author)
+- [Features](#-features)
+- [Compatibility](#️-compatibility)
+- [Roadmap](#️-roadmap)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Project Structure](#-project-structure)
+- [How It Works](#-how-it-works)
+- [Requirements](#️-requirements)
+- [Contributing](#-contributing)
+- [Known Issues](#-known-issues)
+- [Useful Resources](#-useful-resources)
+- [License](#-license)
+- [Author](#-author)
 
 ## ⚡ Features
 
@@ -113,8 +113,8 @@ sudo ./install.sh --version    # Version
 
 ```
 debian-post-install/
-├── 📄 README.md                 # This file
-├── 📄 README.en.md              # English Readme
+├── 📄 README.md                 # Portuguese Readme
+├── 📄 README_EN.md              # This file
 ├── 📄 LICENSE                   # MIT License
 ├── 🚀 install.sh               # Main script (in development)
 ├── 📂 scripts/
