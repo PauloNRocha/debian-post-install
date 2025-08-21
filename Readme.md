@@ -1,3 +1,7 @@
+[Read this document in English](docs/Readme_EN.md)
+
+---
+
 # 🐧 Debian Post-Install
 
 [![Debian](https://img.shields.io/badge/Debian-10%20|%2011%20|%2012%20|%2013-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org/)
@@ -129,6 +133,7 @@ debian-post-install/
 └── 📂 docs/                   # Documentação adicional
     ├── troubleshooting.md     # Solução de problemas
     └── Readme_EN.md          # Readme em inglês
+```
 
 ## 🔧 Como Funciona
 
