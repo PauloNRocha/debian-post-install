@@ -1,8 +1,4 @@
-[Read this document in English](docs/Readme_EN.md)
-
----
-
-# 🐧 Debian Post-Install
+# 🐧 Debian Post-Install  - [[In English]](docs/Readme_EN.md)
 
 [![Debian](https://img.shields.io/badge/Debian-10%20|%2011%20|%2012%20|%2013-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
@@ -12,19 +8,19 @@ Script para automatizar a configuração pós-instalação do Debian, adicionand
 
 ## 📋 Índice
 
-- [Funcionalidades](#funcionalidades)
-- [Compatibilidade](#compatibilidade)
-- [Roadmap](#roadmap)
-- [Instalação](#instalação)
-- [Uso](#uso)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Como Funciona](#como-funciona)
-- [Requisitos](#requisitos)
-- [Contribuição](#contribuição)
-- [Problemas Conhecidos](#problemas-conhecidos)
-- [Recursos Úteis](#recursos-úteis)
-- [Licença](#licença)
-- [Autor](#autor)
+- [Funcionalidades](#-funcionalidades)
+- [Compatibilidade](#️-compatibilidade)
+- [Roadmap](#️-roadmap)
+- [Instalação](#-instalação)
+- [Uso](#-uso)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Como Funciona](#-como-funciona)
+- [Requisitos](#️-requisitos)
+- [Contribuição](#-contribuição)
+- [Problemas Conhecidos](#-problemas-conhecidos)
+- [Recursos Úteis](#-recursos-úteis)
+- [Licença](#-licença)
+- [Autor](#-autor)
 
 ## ⚡ Funcionalidades
 
