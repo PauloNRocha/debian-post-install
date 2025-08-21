@@ -8,19 +8,19 @@ A script to automate Debian's post-installation setup, adding repositories, inst
 
 ## 📋 Table of Contents
 
-- [Features](#-features)
-- [Compatibility](#-compatibility)
-- [Roadmap](#-roadmap)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
-- [How It Works](#-how-it-works)
-- [Requirements](#-requirements)
-- [Contributing](#-contributing)
-- [Known Issues](#-known-issues)
-- [Useful Resources](#-useful-resources)
-- [License](#-license)
-- [Author](#-author)
+- [Features](#features)
+- [Compatibility](#compatibility)
+- [Roadmap](#roadmap)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [How It Works](#how-it-works)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+- [Known Issues](#known-issues)
+- [Useful Resources](#useful-resources)
+- [License](#license)
+- [Author](#author)
 
 ## ⚡ Features
 

@@ -12,19 +12,19 @@ Script para automatizar a configuração pós-instalação do Debian, adicionand
 
 ## 📋 Índice
 
-- [Funcionalidades](#-funcionalidades)
-- [Compatibilidade](#-compatibilidade)
-- [Roadmap](#-roadmap)
-- [Instalação](#-instalação)
-- [Uso](#-uso)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Como Funciona](#-como-funciona)
-- [Requisitos](#-requisitos)
-- [Contribuição](#-contribuição)
-- [Problemas Conhecidos](#-problemas-conhecidos)
-- [Recursos Úteis](#-recursos-úteis)
-- [Licença](#-licença)
-- [Autor](#-autor)
+- [Funcionalidades](#funcionalidades)
+- [Compatibilidade](#compatibilidade)
+- [Roadmap](#roadmap)
+- [Instalação](#instalação)
+- [Uso](#uso)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Como Funciona](#como-funciona)
+- [Requisitos](#requisitos)
+- [Contribuição](#contribuição)
+- [Problemas Conhecidos](#problemas-conhecidos)
+- [Recursos Úteis](#recursos-úteis)
+- [Licença](#licença)
+- [Autor](#autor)
 
 ## ⚡ Funcionalidades
 
