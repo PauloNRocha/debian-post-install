@@ -75,8 +75,8 @@ run_with_progress() {
 clear
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    DEBIAN POST-INSTALL                      ║"
-echo "║              Instalador de Multimídia e Codecs              ║"
+echo "║                    DEBIAN POST-INSTALL                       ║"
+echo "║              Instalador de Multimídia e Codecs               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 

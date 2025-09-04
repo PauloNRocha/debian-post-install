@@ -50,8 +50,8 @@ run_with_progress() {
     local timeout_seconds="${3:-180}" # Aumentado para instalações
 
     print_step "$message"
-    # Ocultar output de apt para não poluir a tela
-    timeout "$timeout_seconds" bash -c "$command" > /tmp/script_output 2>&1 &    local cmd_pid=$!
+    timeout "$timeout_seconds" bash -c "$command" > /tmp/script_output 2>&1 &
+    local cmd_pid=$!
     spinner $cmd_pid
     wait $cmd_pid
     local exit_code=$?
