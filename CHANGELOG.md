@@ -16,6 +16,10 @@
 - `03-multimedia.sh`, `04-essential-apps.sh` e `06-flatpak.sh` movidos para a base comum.
 - `05-development.sh` modernizado, com base segura via pacotes do Debian e opcoes explicitas para VS Code e Docker.
 - README e arquivos de contexto atualizados para refletir apenas o que realmente existe.
+- Layout dos scripts padronizado novamente para o estilo visual classico do projeto.
+- `install.sh` alterado para menu interativo com selecao por numeros.
+- Menu principal enriquecido com descricoes curtas por opcao.
+- Todos os scripts revisados com `shellcheck`.
 
 ### Removido
 
