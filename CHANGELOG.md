@@ -25,6 +25,8 @@
 - Fluxo `--with-docker` corrigido no `05-development.sh`, sem depender do bloco do VS Code.
 - Dependencia legada `apt-transport-https` removida do fluxo do VS Code.
 - README principal e README em ingles ajustados para refletir o menu interativo textual.
+- `01-repositories.sh` endurecido para validar `Components:` por tokens exatos no `deb822`.
+- `01-repositories.sh` ajustado para reescrever linhas `deb` e `deb-src` no layout classico.
 
 ### Removido
 

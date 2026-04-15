@@ -14,7 +14,8 @@ Projeto para automatizar uma pos-instalacao enxuta e previsivel do Debian 13 (Tr
 ## Modulos disponiveis
 
 - `01-repositories.sh`
-  - Habilita `contrib`, `non-free` e `non-free-firmware` no arquivo `debian.sources`.
+  - Habilita `contrib`, `non-free` e `non-free-firmware` no layout APT ativo.
+  - No layout classico, ajusta linhas `deb` e `deb-src`.
 - `02-drivers.sh`
   - Detecta hardware e instala drivers e firmware para bare metal.
   - Nao deve ser usado em container.
@@ -135,7 +136,7 @@ debian-post-install/
 
 ### Repositorios APT
 
-O projeto prefere `/etc/apt/sources.list.d/debian.sources`, mas aceita tambem `/etc/apt/sources.list` quando o sistema Debian 13 ainda estiver nesse layout. Antes da pesquisa, a ideia era continuar editando apenas `sources.list` com `sed`. Depois da pesquisa nas referencias do Debian, o fluxo foi refeito para priorizar `deb822`, sem quebrar Debian 13 instalado com o formato classico.
+O projeto prefere `/etc/apt/sources.list.d/debian.sources`, mas aceita tambem `/etc/apt/sources.list` quando o sistema Debian 13 ainda estiver nesse layout. Antes da pesquisa, a ideia era continuar editando apenas `sources.list` com `sed`. Depois da pesquisa nas referencias do Debian, o fluxo foi refeito para priorizar `deb822`, sem quebrar Debian 13 instalado com o formato classico. No formato classico, o modulo agora atualiza tanto `deb` quanto `deb-src`, e no `deb822` a validacao de `Components:` passou a usar tokens exatos.
 
 ### Desenvolvimento
 

@@ -7,7 +7,8 @@ This repository provides a Debian 13 post-install toolkit focused on desktop and
 ## Available modules
 
 - `01-repositories.sh`
-  - Enables `contrib`, `non-free`, and `non-free-firmware` in `debian.sources`.
+  - Enables `contrib`, `non-free`, and `non-free-firmware` in the active APT source layout.
+  - On classic layout, it updates both `deb` and `deb-src` lines.
 - `02-drivers.sh`
   - Hardware detection and firmware installation for bare metal only.
 - `03-multimedia.sh`

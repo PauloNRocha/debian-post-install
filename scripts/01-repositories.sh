@@ -20,6 +20,124 @@ TARGET_COMPONENTS="main contrib non-free non-free-firmware"
 DEB822_SOURCE_FILE="/etc/apt/sources.list.d/debian.sources"
 CLASSIC_SOURCE_FILE="/etc/apt/sources.list"
 
+validate_deb822_components() {
+    local file_path="$1"
+
+    awk '
+        function has_token(haystack, needle, token_count, tokens, idx) {
+            token_count = split(haystack, tokens, /[[:space:]]+/)
+            for (idx = 1; idx <= token_count; idx++) {
+                if (tokens[idx] == needle) {
+                    return 1
+                }
+            }
+            return 0
+        }
+
+        /^Components:/ {
+            components = $0
+            sub(/^Components:[[:space:]]*/, "", components)
+            lines++
+            if (!has_token(components, "main") ||
+                !has_token(components, "contrib") ||
+                !has_token(components, "non-free") ||
+                !has_token(components, "non-free-firmware")) {
+                bad = 1
+            }
+        }
+
+        END {
+            exit(lines == 0 || bad)
+        }
+    ' "${file_path}"
+}
+
+rewrite_classic_sources() {
+    local source_file="$1"
+    local target_file="$2"
+
+    awk -v target="${TARGET_COMPONENTS}" '
+        function rebuild(line, rest, type, options, uri, suite, prefix) {
+            rest = line
+            sub(/^[[:space:]]+/, "", rest)
+
+            if (rest ~ /^deb-src([[:space:]]|$)/) {
+                type = "deb-src"
+                sub(/^deb-src[[:space:]]+/, "", rest)
+            } else if (rest ~ /^deb([[:space:]]|$)/) {
+                type = "deb"
+                sub(/^deb[[:space:]]+/, "", rest)
+            } else {
+                return line
+            }
+
+            options = ""
+            if (rest ~ /^\[[^]]+\][[:space:]]+/) {
+                match(rest, /^\[[^]]+\]/)
+                options = substr(rest, RSTART, RLENGTH)
+                rest = substr(rest, RLENGTH + 1)
+                sub(/^[[:space:]]+/, "", rest)
+            }
+
+            if (match(rest, /^[^[:space:]]+/) == 0) {
+                return "__PARSE_ERROR__"
+            }
+            uri = substr(rest, RSTART, RLENGTH)
+            rest = substr(rest, RLENGTH + 1)
+            sub(/^[[:space:]]+/, "", rest)
+
+            if (match(rest, /^[^[:space:]]+/) == 0) {
+                return "__PARSE_ERROR__"
+            }
+            suite = substr(rest, RSTART, RLENGTH)
+
+            prefix = type
+            if (options != "") {
+                prefix = prefix " " options
+            }
+
+            return prefix " " uri " " suite " " target
+        }
+
+        /^[[:space:]]*deb(-src)?([[:space:]]|$)/ {
+            rebuilt = rebuild($0)
+            if (rebuilt == "__PARSE_ERROR__") {
+                parse_error = 1
+                print $0
+                next
+            }
+            print rebuilt
+            changed = 1
+            next
+        }
+
+        { print }
+
+        END {
+            if (parse_error || changed == 0) {
+                exit 2
+            }
+        }
+    ' "${source_file}" > "${target_file}"
+}
+
+validate_classic_sources() {
+    local file_path="$1"
+
+    awk '
+        /^[[:space:]]*deb(-src)?([[:space:]]|$)/ {
+            lines++
+            if ($0 !~ /^[[:space:]]*deb(-src)?([[:space:]]+\[[^]]+\])?[[:space:]]+[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+main contrib non-free non-free-firmware[[:space:]]*$/) {
+                bad = 1
+            }
+        }
+
+        END {
+            exit(lines == 0 || bad)
+        }
+    ' "${file_path}"
+}
+
 print_info "Este modulo suporta Debian 13 com deb822 ou sources.list classico."
 
 if [[ -f "${DEB822_SOURCE_FILE}" ]]; then
@@ -57,35 +175,13 @@ if [[ "${SOURCE_LAYOUT}" == "deb822" ]]; then
         }
     ' "${SOURCE_FILE}" > "${temporary_source}" || die "Falha ao preparar a nova configuracao do debian.sources."
 
-    if ! awk '
-        /^Components:/ {
-            if ($0 !~ /main/ || $0 !~ /contrib/ || $0 !~ /non-free/ || $0 !~ /non-free-firmware/) {
-                bad = 1
-            }
-        }
-        END { exit bad }
-    ' "${temporary_source}"; then
+    if ! validate_deb822_components "${temporary_source}"; then
         die "Validacao falhou ao preparar ${SOURCE_FILE}."
     fi
 else
-    awk '
-        /^deb([[:space:]]|$)/ {
-            line=$0
-            split(line, fields, /[[:space:]]+/)
-            prefix=""
-            for (i = 1; i <= 3 && i <= length(fields); i++) {
-                prefix = prefix fields[i]
-                if (i < 3) {
-                    prefix = prefix " "
-                }
-            }
-            print prefix " main contrib non-free non-free-firmware"
-            next
-        }
-        { print }
-    ' "${SOURCE_FILE}" > "${temporary_source}" || die "Falha ao preparar a nova configuracao do sources.list."
+    rewrite_classic_sources "${SOURCE_FILE}" "${temporary_source}" || die "Falha ao preparar a nova configuracao do sources.list."
 
-    if ! grep -Eq '^deb .+ main contrib non-free non-free-firmware$' "${temporary_source}"; then
+    if ! validate_classic_sources "${temporary_source}"; then
         die "Validacao falhou ao preparar ${SOURCE_FILE}."
     fi
 fi
