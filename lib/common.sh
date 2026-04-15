@@ -5,7 +5,6 @@ if [[ -n "${DEBIAN_POST_INSTALL_COMMON_LOADED:-}" ]]; then
 fi
 DEBIAN_POST_INSTALL_COMMON_LOADED=1
 
-PROJECT_ROOT="$(cd -- "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_BASE_DIR="/var/log/debian-post-install"
 TMP_BASE_DIR="/tmp/debian-post-install"
 
@@ -14,23 +13,35 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
+PURPLE='\033[0;35m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-print_success() { echo -e "${GREEN}[ok]${NC} $1"; }
-print_error()   { echo -e "${RED}[erro]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[aviso]${NC} $1"; }
-print_info()    { echo -e "${BLUE}[info]${NC} $1"; }
-print_header()  { echo -e "\n${CYAN}${BOLD}== $1 ==${NC}\n"; }
-print_step()    { echo -e "${BLUE}-->${NC} $1"; }
+print_success() { echo -e "${GREEN}✓${NC} $1"; }
+print_error()   { echo -e "${RED}❌${NC} $1"; }
+print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
+print_info()    { echo -e "${BLUE}ℹ${NC} $1"; }
+print_header()  { echo -e "\n${CYAN}${BOLD}=== $1 ===${NC}\n"; }
+print_step()    { echo -e "${PURPLE}▶${NC} $1"; }
+
+center_text() {
+    local width="$1"
+    local text="$2"
+    local text_length="${#text}"
+    local left_padding=$(((width - text_length) / 2))
+    local right_padding=$((width - text_length - left_padding))
+
+    printf '%*s%s%*s' "${left_padding}" '' "${text}" "${right_padding}" ''
+}
 
 show_banner() {
     local title="$1"
+    clear
     echo -e "${CYAN}${BOLD}"
-    echo "============================================================"
-    echo " Debian Post-Install"
-    echo " ${title}"
-    echo "============================================================"
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    printf "║%s║\n" "$(center_text 62 "DEBIAN POST-INSTALL")"
+    printf "║%s║\n" "$(center_text 62 "${title}")"
+    echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
 
@@ -59,36 +70,65 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+spinner() {
+    local pid="$1"
+    local delay=0.1
+    local spinstr=$'|/-\\'
+
+    while ps -p "${pid}" >/dev/null 2>&1; do
+        local temp=${spinstr#?}
+        printf " [%c]  " "${spinstr}"
+        spinstr=${temp}${spinstr%"${temp}"}
+        sleep "${delay}"
+        printf "\b\b\b\b\b\b"
+    done
+    printf "    \b\b\b\b"
+}
+
 run_cmd() {
     local message="$1"
     shift
+    local timeout_seconds="${RUN_CMD_TIMEOUT:-600}"
 
     local output_file="${MODULE_TMP_DIR}/last-command.log"
     print_step "${message}"
 
-    if "$@" >"${output_file}" 2>&1; then
-        cat "${output_file}" >> "${MODULE_LOG}"
-        print_success "${message}"
+    timeout "${timeout_seconds}" "$@" >"${output_file}" 2>&1 &
+    local cmd_pid=$!
+    spinner "${cmd_pid}"
+    wait "${cmd_pid}"
+    local exit_code=$?
+
+    cat "${output_file}" >> "${MODULE_LOG}"
+
+    if [[ "${exit_code}" -eq 0 ]]; then
+        print_success "Concluído"
         return 0
     fi
 
-    local exit_code=$?
-    cat "${output_file}" >> "${MODULE_LOG}"
-    print_error "${message}"
+    if [[ "${exit_code}" -eq 124 ]]; then
+        print_error "Timeout ao executar: ${message}"
+        return 1
+    fi
+
+    print_error "Falhou (código: ${exit_code})"
     if [[ -s "${output_file}" ]]; then
-        echo -e "${YELLOW}Ultimas linhas:${NC}"
+        echo -e "${YELLOW}Últimas linhas do erro:${NC}"
         tail -n 20 "${output_file}"
     fi
     return "${exit_code}"
 }
 
 require_root() {
+    print_step "Verificando privilégios de root..."
     if [[ "${EUID}" -ne 0 ]]; then
         die "Este script precisa ser executado como root."
     fi
+    print_success "Executando como root"
 }
 
 require_debian_13() {
+    print_step "Detectando versão do sistema..."
     if [[ ! -f /etc/os-release ]]; then
         die "Nao foi possivel identificar o sistema operacional."
     fi
@@ -103,6 +143,9 @@ require_debian_13() {
     if [[ "${VERSION_ID:-}" != "13" ]]; then
         die "Projeto suportado apenas em Debian 13 (Trixie)."
     fi
+
+    print_success "Detectado Debian ${VERSION_ID}"
+    print_info "Sistema: Debian ${VERSION_ID}"
 }
 
 get_virtualization_type() {
@@ -121,10 +164,12 @@ get_virtualization_type() {
 
 require_bare_metal() {
     local virt_type
+    print_step "Verificando se o ambiente é bare metal..."
     virt_type="$(get_virtualization_type)"
     if [[ -n "${virt_type}" && "${virt_type}" != "none" ]]; then
         die "Este modulo foi desenhado para bare metal. Ambiente detectado: ${virt_type}."
     fi
+    print_success "Ambiente bare metal confirmado"
 }
 
 mark_apt_sources_changed() {
@@ -136,7 +181,7 @@ ensure_apt_updated() {
         return 0
     fi
 
-    run_cmd "Atualizando indice de pacotes" apt-get update
+    run_cmd "Atualizando lista de pacotes (apt update)" apt-get update
     APT_UPDATED="true"
 }
 

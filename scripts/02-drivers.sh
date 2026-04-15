@@ -3,12 +3,13 @@ set -euo pipefail
 IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 common_init "02-drivers"
-show_banner "Instalador de drivers e firmware"
+show_banner "Instalador de Drivers e Firmwares"
 
-print_header "Validacao do ambiente"
+print_header "VERIFICAÇÃO DE PRÉ-REQUISITOS"
 require_root
 require_debian_13
 require_bare_metal
@@ -22,6 +23,7 @@ if ! grep -Eq '^Components:.*contrib.*non-free.*non-free-firmware|^Components:.*
     die "Repositorios non-free ainda nao estao ativos. Execute 01-repositories.sh antes deste modulo."
 fi
 
+print_header "INSTALAÇÃO DE DRIVERS E FIRMWARES"
 ensure_apt_updated
 install_packages pciutils usbutils
 
@@ -86,7 +88,7 @@ if [[ "${#packages[@]}" -eq 0 ]]; then
     exit 0
 fi
 
-print_header "Pacotes selecionados"
+print_header "PACOTES SELECIONADOS"
 printf ' - %s\n' "${reasons[@]}"
 
 install_packages "${packages[@]}"

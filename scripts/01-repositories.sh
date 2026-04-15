@@ -3,13 +3,17 @@ set -euo pipefail
 IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 common_init "01-repositories"
-show_banner "Configurador de repositorios"
+show_banner "Configurador de Repositórios"
 
-print_header "Validacao do ambiente"
-require_root
+if [[ "${EUID}" -ne 0 ]]; then
+    print_error "Este script precisa ser executado como root."
+    exit 1
+fi
+
 require_debian_13
 
 SOURCE_FILE="/etc/apt/sources.list.d/debian.sources"
@@ -24,6 +28,8 @@ fi
 
 backup_path="$(backup_file "${SOURCE_FILE}")"
 print_success "Backup salvo em ${backup_path}"
+
+print_header "CONFIGURAÇÃO DE REPOSITÓRIOS"
 
 temporary_source="${MODULE_TMP_DIR}/debian.sources"
 

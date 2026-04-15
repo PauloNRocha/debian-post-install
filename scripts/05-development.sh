@@ -35,12 +35,13 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 common_init "05-development"
-show_banner "Instalador de ferramentas de desenvolvimento"
+show_banner "Instalador de Ferramentas de Desenvolvimento"
 
-print_header "Validacao do ambiente"
+print_header "VERIFICAÇÃO DE PRÉ-REQUISITOS"
 require_root
 require_debian_13
 
@@ -68,12 +69,15 @@ printf ' - %s\n' "${development_packages[@]}"
 install_packages "${development_packages[@]}"
 
 if [[ "${WITH_VSCODE}" == "true" ]]; then
-    print_header "VS Code"
+    print_header "VISUAL STUDIO CODE"
     install_packages apt-transport-https gpg wget
 
     tmp_key="${MODULE_TMP_DIR}/microsoft.gpg"
     run_cmd "Baixando chave do VS Code" bash -lc "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > '${tmp_key}'"
     install -D -o root -g root -m 0644 "${tmp_key}" /usr/share/keyrings/microsoft.gpg
+
+    # shellcheck disable=SC1091
+    docker_suite="$(. /etc/os-release && printf '%s' "${VERSION_CODENAME}")"
 
     cat > /etc/apt/sources.list.d/vscode.sources <<'EOF'
 Types: deb
@@ -89,7 +93,7 @@ EOF
 fi
 
 if [[ "${WITH_DOCKER}" == "true" ]]; then
-    print_header "Docker"
+    print_header "DOCKER"
     if [[ -n "$(get_virtualization_type)" ]]; then
         die "Docker nao e instalado automaticamente em container por este modulo."
     fi
@@ -106,7 +110,7 @@ if [[ "${WITH_DOCKER}" == "true" ]]; then
     cat > /etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/debian
-Suites: $(. /etc/os-release && echo "${VERSION_CODENAME}")
+Suites: ${docker_suite}
 Components: stable
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/docker.asc

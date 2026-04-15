@@ -3,12 +3,13 @@ set -euo pipefail
 IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 common_init "04-essential-apps"
-show_banner "Instalador de aplicacoes essenciais"
+show_banner "Instalador de Aplicações Essenciais"
 
-print_header "Validacao do ambiente"
+print_header "VERIFICAÇÃO DE PRÉ-REQUISITOS"
 require_root
 require_debian_13
 
@@ -27,7 +28,8 @@ declare -a essential_packages=(
     zip
 )
 
-print_header "Pacotes selecionados"
+print_header "INSTALAÇÃO DE APLICAÇÕES ESSENCIAIS"
+print_info "Pacotes a serem instalados:"
 printf ' - %s\n' "${essential_packages[@]}"
 
 install_packages "${essential_packages[@]}"

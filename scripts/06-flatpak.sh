@@ -3,12 +3,13 @@ set -euo pipefail
 IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 common_init "06-flatpak"
 show_banner "Instalador de Flatpak"
 
-print_header "Validacao do ambiente"
+print_header "VERIFICAÇÃO DE PRÉ-REQUISITOS"
 require_root
 require_debian_13
 
@@ -24,7 +25,8 @@ else
     print_warning "Nenhuma loja grafica suportada foi detectada. Apenas o Flatpak base sera instalado."
 fi
 
-print_header "Pacotes selecionados"
+print_header "INSTALAÇÃO E CONFIGURAÇÃO DO FLATPAK"
+print_info "Pacotes a serem instalados:"
 printf ' - %s\n' "${flatpak_packages[@]}"
 
 install_packages "${flatpak_packages[@]}"
