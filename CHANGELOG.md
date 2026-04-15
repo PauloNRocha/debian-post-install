@@ -20,6 +20,7 @@
 - `install.sh` alterado para menu interativo com selecao por numeros.
 - Menu principal enriquecido com descricoes curtas por opcao.
 - Todos os scripts revisados com `shellcheck`.
+- `01-repositories.sh` e `02-drivers.sh` ajustados para aceitar Debian 13 com `deb822` e tambem com `sources.list` classico.
 
 ### Removido
 

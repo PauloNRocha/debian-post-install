@@ -14,7 +14,7 @@ The project is no longer trying to cover every Debian release or every possible 
 ## Current scope
 
 - Debian 13 only.
-- `deb822` APT sources only.
+- `deb822` as the preferred APT layout, while still accepting classic `sources.list` on Debian 13.
 - Modular scripts orchestrated by `install.sh`.
 - Shared helpers in `lib/common.sh`.
 

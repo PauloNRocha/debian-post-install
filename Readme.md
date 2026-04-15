@@ -7,7 +7,7 @@ Projeto para automatizar uma pos-instalacao enxuta e previsivel do Debian 13 (Tr
 ## Escopo atual
 
 - Debian 13 apenas.
-- Formato APT `deb822` apenas.
+- Suporte a `deb822` e tambem ao `sources.list` classico quando ele ainda for o layout ativo.
 - Execucao modular por script individual ou via `install.sh`.
 - Logs persistentes em `/var/log/debian-post-install/`.
 
@@ -135,7 +135,7 @@ debian-post-install/
 
 ### Repositorios APT
 
-O projeto agora trabalha apenas com `/etc/apt/sources.list.d/debian.sources`. Antes da pesquisa, a ideia era continuar editando `sources.list` com `sed`. Depois da pesquisa nas referencias do Debian, o fluxo foi refeito para o formato `deb822`, hoje recomendado no Trixie.
+O projeto prefere `/etc/apt/sources.list.d/debian.sources`, mas aceita tambem `/etc/apt/sources.list` quando o sistema Debian 13 ainda estiver nesse layout. Antes da pesquisa, a ideia era continuar editando apenas `sources.list` com `sed`. Depois da pesquisa nas referencias do Debian, o fluxo foi refeito para priorizar `deb822`, sem quebrar Debian 13 instalado com o formato classico.
 
 ### Desenvolvimento
 

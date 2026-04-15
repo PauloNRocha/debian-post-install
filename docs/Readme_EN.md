@@ -2,7 +2,7 @@
 
 [Em portugues](../Readme.md)
 
-This repository provides a Debian 13 post-install toolkit focused on desktop and workstation use. The project was recovered and narrowed on purpose: Debian 13 only, `deb822` only, and explicit module boundaries.
+This repository provides a Debian 13 post-install toolkit focused on desktop and workstation use. The project was recovered and narrowed on purpose: Debian 13 only, explicit module boundaries, and support for both `deb822` and classic `sources.list` when Debian 13 still uses that layout.
 
 ## Available modules
 

@@ -15,12 +15,18 @@ require_debian_13
 require_bare_metal
 
 SOURCE_FILE="/etc/apt/sources.list.d/debian.sources"
-if [[ ! -f "${SOURCE_FILE}" ]]; then
-    die "Arquivo ${SOURCE_FILE} nao encontrado. Execute 01-repositories.sh antes deste modulo."
-fi
+CLASSIC_SOURCE_FILE="/etc/apt/sources.list"
 
-if ! grep -Eq '^Components:.*contrib.*non-free.*non-free-firmware|^Components:.*contrib.*non-free-firmware.*non-free' "${SOURCE_FILE}"; then
-    die "Repositorios non-free ainda nao estao ativos. Execute 01-repositories.sh antes deste modulo."
+if [[ -f "${SOURCE_FILE}" ]]; then
+    if ! grep -Eq '^Components:.*contrib.*non-free.*non-free-firmware|^Components:.*contrib.*non-free-firmware.*non-free' "${SOURCE_FILE}"; then
+        die "Repositorios non-free ainda nao estao ativos. Execute 01-repositories.sh antes deste modulo."
+    fi
+elif [[ -f "${CLASSIC_SOURCE_FILE}" ]]; then
+    if ! grep -Eq '^deb .+ main contrib non-free non-free-firmware$' "${CLASSIC_SOURCE_FILE}"; then
+        die "Repositorios non-free ainda nao estao ativos. Execute 01-repositories.sh antes deste modulo."
+    fi
+else
+    die "Nenhum arquivo de fontes APT suportado foi encontrado. Execute 01-repositories.sh antes deste modulo."
 fi
 
 print_header "INSTALAÇÃO DE DRIVERS E FIRMWARES"

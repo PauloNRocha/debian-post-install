@@ -14,7 +14,7 @@ O projeto nao tenta mais ser um "instalador universal". Cada modulo precisa ter 
 ## Escopo atual
 
 - Debian 13 apenas.
-- APT em formato `deb822`.
+- APT com prioridade para `deb822`, mas com compatibilidade tambem para `sources.list` classico em Debian 13.
 - Scripts modulares com logs persistentes.
 - Base comum em `lib/common.sh`.
 - Instalador principal em `install.sh`.

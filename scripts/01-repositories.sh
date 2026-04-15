@@ -16,14 +16,22 @@ fi
 
 require_debian_13
 
-SOURCE_FILE="/etc/apt/sources.list.d/debian.sources"
 TARGET_COMPONENTS="main contrib non-free non-free-firmware"
+DEB822_SOURCE_FILE="/etc/apt/sources.list.d/debian.sources"
+CLASSIC_SOURCE_FILE="/etc/apt/sources.list"
 
-print_info "Debian 13 usa o formato deb822 como padrao."
-print_info "Este modulo trabalha apenas com ${SOURCE_FILE}."
+print_info "Este modulo suporta Debian 13 com deb822 ou sources.list classico."
 
-if [[ ! -f "${SOURCE_FILE}" ]]; then
-    die "Arquivo ${SOURCE_FILE} nao encontrado. Converta suas fontes para deb822 e execute novamente."
+if [[ -f "${DEB822_SOURCE_FILE}" ]]; then
+    SOURCE_LAYOUT="deb822"
+    SOURCE_FILE="${DEB822_SOURCE_FILE}"
+    print_info "Layout detectado: deb822 (${SOURCE_FILE})"
+elif [[ -f "${CLASSIC_SOURCE_FILE}" ]]; then
+    SOURCE_LAYOUT="classic"
+    SOURCE_FILE="${CLASSIC_SOURCE_FILE}"
+    print_info "Layout detectado: sources.list classico (${SOURCE_FILE})"
+else
+    die "Nenhum arquivo de fontes APT suportado foi encontrado."
 fi
 
 backup_path="$(backup_file "${SOURCE_FILE}")"
@@ -31,39 +39,62 @@ print_success "Backup salvo em ${backup_path}"
 
 print_header "CONFIGURAÇÃO DE REPOSITÓRIOS"
 
-temporary_source="${MODULE_TMP_DIR}/debian.sources"
+temporary_source="${MODULE_TMP_DIR}/apt-sources.updated"
 
-awk -v target="${TARGET_COMPONENTS}" '
-    BEGIN { changed = 0 }
-    /^Components:/ {
-        print "Components: " target
-        changed = 1
-        next
-    }
-    { print }
-    END {
-        if (changed == 0) {
-            exit 2
+if [[ "${SOURCE_LAYOUT}" == "deb822" ]]; then
+    awk -v target="${TARGET_COMPONENTS}" '
+        BEGIN { changed = 0 }
+        /^Components:/ {
+            print "Components: " target
+            changed = 1
+            next
         }
-    }
-' "${SOURCE_FILE}" > "${temporary_source}" || die "Falha ao preparar a nova configuracao do debian.sources."
+        { print }
+        END {
+            if (changed == 0) {
+                exit 2
+            }
+        }
+    ' "${SOURCE_FILE}" > "${temporary_source}" || die "Falha ao preparar a nova configuracao do debian.sources."
+
+    if ! awk '
+        /^Components:/ {
+            if ($0 !~ /main/ || $0 !~ /contrib/ || $0 !~ /non-free/ || $0 !~ /non-free-firmware/) {
+                bad = 1
+            }
+        }
+        END { exit bad }
+    ' "${temporary_source}"; then
+        die "Validacao falhou ao preparar ${SOURCE_FILE}."
+    fi
+else
+    awk '
+        /^deb([[:space:]]|$)/ {
+            line=$0
+            split(line, fields, /[[:space:]]+/)
+            prefix=""
+            for (i = 1; i <= 3 && i <= length(fields); i++) {
+                prefix = prefix fields[i]
+                if (i < 3) {
+                    prefix = prefix " "
+                }
+            }
+            print prefix " main contrib non-free non-free-firmware"
+            next
+        }
+        { print }
+    ' "${SOURCE_FILE}" > "${temporary_source}" || die "Falha ao preparar a nova configuracao do sources.list."
+
+    if ! grep -Eq '^deb .+ main contrib non-free non-free-firmware$' "${temporary_source}"; then
+        die "Validacao falhou ao preparar ${SOURCE_FILE}."
+    fi
+fi
 
 if cmp -s "${SOURCE_FILE}" "${temporary_source}"; then
     print_warning "Os componentes ja estavam configurados como: ${TARGET_COMPONENTS}"
 else
     install -m 0644 "${temporary_source}" "${SOURCE_FILE}"
     print_success "Arquivo ${SOURCE_FILE} atualizado."
-fi
-
-if ! awk '
-    /^Components:/ {
-        if ($0 !~ /main/ || $0 !~ /contrib/ || $0 !~ /non-free/ || $0 !~ /non-free-firmware/) {
-            bad = 1
-        }
-    }
-    END { exit bad }
-' "${SOURCE_FILE}"; then
-    die "Validacao falhou. Revise ${SOURCE_FILE}."
 fi
 
 ensure_apt_updated
