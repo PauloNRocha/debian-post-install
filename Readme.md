@@ -1,194 +1,167 @@
-# 🐧 Debian Post-Install  - [[In English]](docs/Readme_EN.md)
+# Debian Post-Install
 
-[![Debian](https://img.shields.io/badge/Debian-10%20|%2011%20|%2012%20|%2013-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-[![Shell Script](https://img.shields.io/badge/Shell_Script-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[In English](docs/Readme_EN.md)
 
-Script para automatizar a configuração pós-instalação do Debian, adicionando repositórios, instalando firmwares e drivers, instalando aplicações essenciais, com backup automático.
+Projeto para automatizar uma pos-instalacao enxuta e previsivel do Debian 13 (Trixie), com foco em desktop e workstation. O repositorio nao tenta mais cobrir Debian 10, 11 ou 12, e tambem nao promete um instalador "magico": cada modulo faz uma tarefa especifica, com escopo claro, log em disco e mensagens objetivas.
 
-## 📋 Índice
+## Escopo atual
 
-- [Funcionalidades](#-funcionalidades)
-- [Compatibilidade](#️-compatibilidade)
-- [Roadmap](#️-roadmap)
-- [Instalação](#-instalação)
-- [Uso](#-uso)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Como Funciona](#-como-funciona)
-- [Requisitos](#️-requisitos)
-- [Contribuição](#-contribuição)
-- [Problemas Conhecidos](#-problemas-conhecidos)
-- [Recursos Úteis](#-recursos-úteis)
-- [Licença](#-licença)
-- [Autor](#-autor)
+- Debian 13 apenas.
+- Formato APT `deb822` apenas.
+- Execucao modular por script individual ou via `install.sh`.
+- Logs persistentes em `/var/log/debian-post-install/`.
 
-## ⚡ Funcionalidades
+## Modulos disponiveis
 
-### 🔧 Disponível
+- `01-repositories.sh`
+  - Habilita `contrib`, `non-free` e `non-free-firmware` no arquivo `debian.sources`.
+- `02-drivers.sh`
+  - Detecta hardware e instala drivers e firmware para bare metal.
+  - Nao deve ser usado em container.
+- `03-multimedia.sh`
+  - Instala codecs e ferramentas multimidia comuns.
+- `04-essential-apps.sh`
+  - Instala pacotes basicos de uso geral.
+- `05-development.sh`
+  - Instala base de desenvolvimento a partir dos repositorios do Debian.
+  - Pode habilitar opcionalmente VS Code e Docker com flags explicitas.
+- `06-flatpak.sh`
+  - Instala Flatpak e adiciona Flathub.
+  - Detecta integracao GNOME ou KDE quando fizer sentido.
 
-- ✅ Configuração de repositórios `contrib` e `non-free`.
-- ✅ Backup automático do `sources.list`.
-- ✅ Interface colorida com indicadores de progresso.
-- ✅ Detecção automática da versão do Debian.
-- ✅ Validação de alterações aplicadas.
+## O que mudou nesta recuperacao
 
-### 🚧 Em Desenvolvimento
+- O projeto foi limitado a Debian 13 para reduzir ramificacoes e suporte legado.
+- O fluxo de repositorios foi modernizado para `deb822`, que e o caminho recomendado no Trixie.
+- Foi criado um `install.sh` real para orquestrar os modulos.
+- Os scripts passaram a compartilhar uma base comum em `lib/common.sh`.
+- O README agora descreve apenas arquivos e fluxos que realmente existem.
+- Foi criado um `CHANGELOG.md` para registrar a evolucao do projeto.
 
-- 🔄 Instalação automática de drivers gráficos e Wi-Fi.
-- 🔄 Multimídia (codecs, players e ferramentas de áudio/vídeo).
-- 🔄 Aplicações essenciais (Git, curl, vim, build-essential).
-- 🔄 Desenvolvimento (VSCode, Node.js, Docker, IDEs).
-- 🔄 Flatpak e aplicações Flatpak.
-
-## 🖥️ Compatibilidade
-
-| Versão | Codinome | Status | Testado |
-|--------|----------|--------|---------|
-| Debian 13 | Trixie | ✅ Suportado | ✅ |
-| Debian 12 | Bookworm | ✅ Suportado | ✅ |
-| Debian 11 | Bullseye | ✅ Suportado | ⏳ |
-| Debian 10 | Buster | ✅ Suportado | ⏳ |
-
-## 🛠️ Roadmap
-
-| Feature                         | Status       | Observações                       |
-| ------------------------------- | ------------ | --------------------------------- |
-| Configuração de repositórios    | ✅ Completa   | Scripts testados e validados      |
-| Backup automático               | ✅ Completo   | Inclui timestamp e restauração    |
-| Drivers gráficos/Wi-Fi          | 🚧 Planejado | Suporte Intel/NVIDIA/AMD          |
-| Multimídia e Codecs             | 🚧 Planejado | VLC, ffmpeg, codecs essenciais    |
-| Aplicações essenciais           | 🚧 Planejado | Git, curl, vim, build-essential   |
-| Ferramentas de desenvolvimento  | 🚧 Planejado | VSCode, Node.js, Docker, IDEs     |
-| Flatpak e apps                  | 🚧 Planejado | Instalação e configuração padrão  |
-| Modo silencioso (--quiet)       | 🚧 Planejado | Para automação em massa           |
-| Forçar reconfiguração (--force) | 🚧 Planejado | Reaplica alterações já existentes |
-
-## 🚀 Instalação
-
-### Método 1: Clone Completo
+## Instalacao
 
 ```bash
 git clone https://github.com/PauloNRocha/debian-post-install.git
 cd debian-post-install
-chmod +x scripts/*.sh
+chmod 755 install.sh scripts/*.sh lib/common.sh
 ```
 
-### Método 2: Download Direto
+## Uso rapido
 
-```bash
-wget https://raw.githubusercontent.com/PauloNRocha/debian-post-install/main/scripts/01-repositories.sh
-chmod +x 01-repositories.sh
-```
-
-### Método 3: Uma Linha
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/PauloNRocha/debian-post-install/main/install.sh | bash
-```
-
-## 💻 Uso
-
-### Script de Repositórios
+Executar apenas o ajuste de repositorios:
 
 ```bash
 sudo ./scripts/01-repositories.sh
 ```
 
-### Script Completo (em breve)
+Preparar uma estacao de trabalho desktop sem Docker e sem drivers:
 
 ```bash
-sudo ./install.sh
+sudo ./install.sh --desktop
 ```
 
-### Opções em desenvolvimento
+Adicionar a base de desenvolvimento usando apenas pacotes do Debian:
 
 ```bash
-sudo ./install.sh --quiet      # Modo silencioso
-sudo ./install.sh --force      # Reaplica alterações
-./install.sh --help            # Ajuda
-sudo ./install.sh --version    # Versão
+sudo ./install.sh --development
 ```
 
-## 📁 Estrutura do Projeto
+Adicionar VS Code ao modulo de desenvolvimento:
 
+```bash
+sudo ./install.sh --development --with-vscode
 ```
+
+Adicionar Docker ao modulo de desenvolvimento:
+
+```bash
+sudo ./install.sh --development --with-docker
+```
+
+Executar tudo, incluindo drivers:
+
+```bash
+sudo ./install.sh --full --drivers
+```
+
+Listar os modulos suportados:
+
+```bash
+./install.sh --list
+```
+
+## Opcoes do install.sh
+
+- `--repositories`
+- `--drivers`
+- `--multimedia`
+- `--essential`
+- `--development`
+- `--flatpak`
+- `--desktop`
+  - Executa `repositories`, `essential`, `multimedia` e `flatpak`.
+- `--full`
+  - Executa `repositories`, `essential`, `multimedia`, `development` e `flatpak`.
+- `--with-vscode`
+  - Habilita o repositorio oficial do VS Code dentro do modulo de desenvolvimento.
+- `--with-docker`
+  - Habilita o repositorio oficial do Docker dentro do modulo de desenvolvimento.
+- `--list`
+- `--help`
+
+## Estrutura do projeto
+
+```text
 debian-post-install/
-├── 📄 README.md                 # Este arquivo
-├── 📄 LICENSE                   # Licença MIT
-├── 🚀 install.sh               # Script principal (em desenvolvimento)
-├── 📂 scripts/
-│   ├── 01-repositories.sh      # ✅ Configuração de repositórios
-│   ├── 02-drivers.sh          # 🚧 Drivers de hardware
-│   ├── 03-multimedia.sh       # 🚧 Codecs e multimídia
-│   ├── 04-essential-apps.sh   # 🚧 Aplicações essenciais
-│   ├── 05-development.sh      # 🚧 Ferramentas de desenvolvimento
-│   ├── 06-flatpak.sh          # 🚧 Suporte a Flatpak
-│   └── 07-scripts-futuros.sh    # 🚧 Novos scripts
-├── 📂 configs/                # Arquivos de configuração
-│   └── sources.list.template  # Template de repositórios
-└── 📂 docs/                   # Documentação adicional
-    ├── troubleshooting.md     # Solução de problemas
-    └── Readme_EN.md          # Readme em inglês
+|-- CHANGELOG.md
+|-- CONTEXT.md
+|-- CONTEXT_EN.md
+|-- Readme.md
+|-- docs/
+|   `-- Readme_EN.md
+|-- install.sh
+|-- lib/
+|   `-- common.sh
+`-- scripts/
+    |-- 01-repositories.sh
+    |-- 02-drivers.sh
+    |-- 03-multimedia.sh
+    |-- 04-essential-apps.sh
+    |-- 05-development.sh
+    `-- 06-flatpak.sh
 ```
 
-## 🔧 Como Funciona
+## Decisoes tecnicas
 
-**Script de Repositórios**
+### Repositorios APT
 
-1. Detecta a versão do Debian.
-2. Verifica se contrib e non-free já estão presentes.
-3. Cria backup automático do sources.list.
-4. Aplica alterações apenas nas linhas deb.
-5. Valida se os repositórios foram adicionados.
-6. Executa apt update com feedback visual.
+O projeto agora trabalha apenas com `/etc/apt/sources.list.d/debian.sources`. Antes da pesquisa, a ideia era continuar editando `sources.list` com `sed`. Depois da pesquisa nas referencias do Debian, o fluxo foi refeito para o formato `deb822`, hoje recomendado no Trixie.
 
-**Repositórios Configurados**
-| Debian | Original                 | Resultado Final                           |
-| ------ | ------------------------ | ----------------------------------------- |
-| 10-11  | `main`                   | `main contrib non-free`                   |
-| 12-13  | `main non-free-firmware` | `main contrib non-free non-free-firmware` |
+### Desenvolvimento
 
-## ⚠️ Requisitos
+Antes da pesquisa, o modulo de desenvolvimento seguia a ideia antiga de instalar Node.js via script remoto do NodeSource. Depois da pesquisa, a base padrao foi movida para os pacotes do proprio Debian 13, e os componentes de terceiros ficaram opcionais e explicitamente separados.
 
-* Debian 10, 11, 12 ou 13
-* Root ou sudo
-* Conexão com a internet
-* Terminal com suporte a cores UTF-8
+### Docker
 
-## 🤝 Contribuição
+O modulo de Docker segue o repositorio oficial do fornecedor. Isso foi mantido, mas com duas travas:
 
-1. Fork o projeto
-2. Crie uma branch (git checkout -b feature/NovaFuncionalidade)
-3. Commit suas mudanças (git commit -m 'Adicionar nova funcionalidade')
-4. Push para a branch (git push origin feature/NovaFuncionalidade)
-5. Abra um Pull Request
+- instalacao somente quando a flag `--with-docker` e usada;
+- aviso explicito sobre impacto em firewall, porque o proprio Docker documenta limitacoes com `nftables`.
 
-**Diretrizes**
+## Limitacoes atuais
 
-- Use Bash
-- Teste em Debian 10-13
-- Inclua cores e indicadores de progresso
-- Documente todas as alterações
+- `02-drivers.sh` foi pensado para bare metal. Em container e recusado.
+- O projeto nao cria interface grafica nem menu interativo.
+- Ainda nao existe suite automatica de testes.
 
-## 🐛 Problemas Conhecidos
+## Referencias tecnicas
 
-* Ícones UTF-8 podem não aparecer em terminais antigos
-* Timeout no apt update em conexões lentas
+- Debian Wiki - SourcesList: https://wiki.debian.org/SourcesList
+- Debian manpage - `sources.list(5)`: https://manpages.debian.org/testing/apt/sources.list.5.en.html
+- Docker - Install Docker Engine on Debian: https://docs.docker.com/engine/install/debian/
+- Visual Studio Code on Linux: https://code.visualstudio.com/docs/setup/linux
+- Flatpak Debian setup: https://flatpak.org/setup/Debian
 
-## 📚 Recursos Úteis
+## Changelog
 
-- [Documentação Debian](https://www.debian.org/doc/)
-- [Debian Repository](https://wiki.debian.org/SourcesList)
-- [Bash Scripting Guide](https://tldp.org/LDP/Bash-Beginners-Guide/html/)
-
-## 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## ✨ Autor
-
-Desenvolvido por Paulo Rocha
-
----
-
-**⭐ Se este projeto foi útil, considere dar uma estrela!**
+Veja `CHANGELOG.md`.

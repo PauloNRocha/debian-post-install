@@ -1,194 +1,72 @@
-# 🐧 Debian Post-Install (English)
+# Debian Post-Install
 
-[![Debian](https://img.shields.io/badge/Debian-10%20|%2011%20|%2012%20|%2013-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-[![Shell Script](https://img.shields.io/badge/Shell_Script-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[Em portugues](../Readme.md)
 
-A script to automate Debian's post-installation setup, adding repositories, installing firmware and drivers, and setting up essential applications, with automatic backups.
+This repository provides a Debian 13 post-install toolkit focused on desktop and workstation use. The project was recovered and narrowed on purpose: Debian 13 only, `deb822` only, and explicit module boundaries.
 
-## 📋 Table of Contents
+## Available modules
 
-- [Features](#-features)
-- [Compatibility](#️-compatibility)
-- [Roadmap](#️-roadmap)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
-- [How It Works](#-how-it-works)
-- [Requirements](#️-requirements)
-- [Contributing](#-contributing)
-- [Known Issues](#-known-issues)
-- [Useful Resources](#-useful-resources)
-- [License](#-license)
-- [Author](#-author)
+- `01-repositories.sh`
+  - Enables `contrib`, `non-free`, and `non-free-firmware` in `debian.sources`.
+- `02-drivers.sh`
+  - Hardware detection and firmware installation for bare metal only.
+- `03-multimedia.sh`
+  - Multimedia tools and codecs.
+- `04-essential-apps.sh`
+  - General-purpose baseline packages.
+- `05-development.sh`
+  - Development baseline from Debian repositories, with optional VS Code and Docker support.
+- `06-flatpak.sh`
+  - Flatpak, Flathub, and optional desktop-store integration.
 
-## ⚡ Features
-
-### 🔧 Available
-
-- ✅ `contrib` and `non-free` repository setup.
-- ✅ Automatic backup of `sources.list`.
-- ✅ Colorful interface with progress indicators.
-- ✅ Automatic detection of the Debian version.
-- ✅ Validation of applied changes.
-
-### 🚧 In Development
-
-- 🔄 Automatic installation of graphics and Wi-Fi drivers.
-- 🔄 Multimedia (codecs, players, and audio/video tools).
-- 🔄 Essential applications (Git, curl, vim, build-essential).
-- 🔄 Development tools (VSCode, Node.js, Docker, IDEs).
-- 🔄 Flatpak and Flatpak applications.
-
-## 🖥️ Compatibility
-
-| Version   | Codename | Status      | Tested |
-| --------- | -------- | ----------- | ------ |
-| Debian 13 | Trixie   | ✅ Supported | ✅      |
-| Debian 12 | Bookworm | ✅ Supported | ✅      |
-| Debian 11 | Bullseye | ✅ Supported | ⏳      |
-| Debian 10 | Buster   | ✅ Supported | ⏳      |
-
-## 🛠️ Roadmap
-
-| Feature                         | Status      | Notes                             |
-| ------------------------------- | ----------- | --------------------------------- |
-| Repository Configuration        | ✅ Complete | Scripts tested and validated      |
-| Automatic Backup                | ✅ Complete | Includes timestamp and restore    |
-| Graphics/Wi-Fi Drivers          | 🚧 Planned  | Intel/NVIDIA/AMD support          |
-| Multimedia & Codecs             | 🚧 Planned  | VLC, ffmpeg, essential codecs     |
-| Essential Applications          | 🚧 Planned  | Git, curl, vim, build-essential   |
-| Development Tools               | 🚧 Planned  | VSCode, Node.js, Docker, IDEs     |
-| Flatpak & Apps                  | 🚧 Planned  | Default installation and setup    |
-| Silent Mode (`--quiet`)         | 🚧 Planned  | For mass automation               |
-| Force Reconfiguration (`--force`) | 🚧 Planned  | Re-applies existing changes       |
-
-## 🚀 Installation
-
-### Method 1: Full Clone
+## Quick start
 
 ```bash
 git clone https://github.com/PauloNRocha/debian-post-install.git
 cd debian-post-install
-chmod +x scripts/*.sh
+chmod 755 install.sh scripts/*.sh lib/common.sh
 ```
 
-### Method 2: Direct Download
+Desktop workstation baseline:
 
 ```bash
-wget https://raw.githubusercontent.com/PauloNRocha/debian-post-install/main/scripts/01-repositories.sh
-chmod +x 01-repositories.sh
+sudo ./install.sh --desktop
 ```
 
-### Method 3: One-Liner
+Development baseline:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PauloNRocha/debian-post-install/main/install.sh | bash
+sudo ./install.sh --development
 ```
 
-## 💻 Usage
-
-### Repositories Script
+Development baseline with VS Code:
 
 ```bash
-sudo ./scripts/01-repositories.sh
+sudo ./install.sh --development --with-vscode
 ```
 
-### Full Script (coming soon)
+Development baseline with Docker:
 
 ```bash
-sudo ./install.sh
+sudo ./install.sh --development --with-docker
 ```
 
-### Options in development
+Full run including drivers:
 
 ```bash
-sudo ./install.sh --quiet      # Silent mode
-sudo ./install.sh --force      # Re-apply changes
-./install.sh --help            # Help
-sudo ./install.sh --version    # Version
+sudo ./install.sh --full --drivers
 ```
 
-## 📁 Project Structure
+## Notes
 
-```
-debian-post-install/
-├── 📄 README.md                 # Portuguese Readme
-├── 📄 README_EN.md              # This file
-├── 📄 LICENSE                   # MIT License
-├── 🚀 install.sh               # Main script (in development)
-├── 📂 scripts/
-│   ├── 01-repositories.sh      # ✅ Repository setup
-│   ├── 02-drivers.sh          # 🚧 Hardware drivers
-│   ├── 03-multimedia.sh       # 🚧 Codecs and multimedia
-│   ├── 04-essential-apps.sh   # 🚧 Essential applications
-│   ├── 05-development.sh      # 🚧 Development tools
-│   ├── 06-flatpak.sh          # 🚧 Flatpak support
-│   └── 07-future-scripts.sh   # 🚧 New scripts
-├── 📂 configs/                # Configuration files
-│   └── sources.list.template  # Repository template
-└── 📂 docs/                   # Additional documentation
-    └── troubleshooting.md     # Troubleshooting guide
-```
+- Driver installation is intended for bare metal and is blocked in containers.
+- Docker setup is opt-in because it changes networking behavior and adds an external repository.
+- The project now uses `CHANGELOG.md` to record relevant changes.
 
-## 🔧 How It Works
+## Technical references
 
-**Repositories Script**
-
-1. Detects the Debian version.
-2. Checks if `contrib` and `non-free` are already present.
-3. Creates an automatic backup of `sources.list`.
-4. Applies changes only to `deb` lines.
-5. Validates that the repositories were added.
-6. Runs `apt update` with visual feedback.
-
-**Configured Repositories**
-| Debian | Original                 | Final Result                              |
-| ------ | ------------------------ | ----------------------------------------- |
-| 10-11  | `main`                   | `main contrib non-free`                   |
-| 12-13  | `main non-free-firmware` | `main contrib non-free non-free-firmware` |
-
-## ⚠️ Requirements
-
-* Debian 10, 11, 12, or 13
-* Root or sudo access
-* Internet connection
-* A terminal with UTF-8 color support
-
-## 🤝 Contributing
-
-1. Fork the project
-2. Create a branch (`git checkout -b feature/NewFeature`)
-3. Commit your changes (`git commit -m 'Add a new feature'`)
-4. Push to the branch (`git push origin feature/NewFeature`)
-5. Open a Pull Request
-
-**Guidelines**
-
-- Use Bash
-- Test on Debian 10-13
-- Include colors and progress indicators
-- Document all changes
-
-## 🐛 Known Issues
-
-* UTF-8 icons may not appear correctly in older terminals
-* `apt update` may time out on slow connections
-
-## 📚 Useful Resources
-
-- [Debian Documentation](https://www.debian.org/doc/)
-- [Debian Repository](https://wiki.debian.org/SourcesList)
-- [Bash Scripting Guide](https://tldp.org/LDP/Bash-Beginners-Guide/html/)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## ✨ Author
-
-Developed by Paulo Rocha
-
----
-
-**⭐ If this project was helpful, please consider giving it a star!**
+- Debian Wiki - SourcesList: https://wiki.debian.org/SourcesList
+- `sources.list(5)` manpage: https://manpages.debian.org/testing/apt/sources.list.5.en.html
+- Docker on Debian: https://docs.docker.com/engine/install/debian/
+- VS Code on Linux: https://code.visualstudio.com/docs/setup/linux
+- Flatpak Debian setup: https://flatpak.org/setup/Debian

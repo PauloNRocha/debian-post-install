@@ -1,144 +1,128 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 IFS=$'\n\t'
 
-# =========================
-# Cores para output
-# =========================
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-PURPLE='\033[0;35m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+WITH_VSCODE="false"
+WITH_DOCKER="false"
 
-# =========================
-# Funções de impressão
-# =========================
-print_success() { echo -e "${GREEN}✓${NC} $1"; }
-print_error()   { echo -e "${RED}❌${NC} $1"; }
-print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
-print_info()    { echo -e "${BLUE}ℹ${NC} $1"; }
-print_header()  { echo -e "\n${CYAN}${BOLD}=== $1 ===${NC}\n"; }
-print_step()    { echo -e "${PURPLE}▶${NC} $1"; }
-
-# =========================
-# Spinner
-# =========================
-spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    while ps -p $pid > /dev/null 2>&1; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-        printf "\b\b\b\b\b\b"
-    done
-    printf "    \b\b\b\b"
+usage() {
+    cat <<'EOF'
+Uso:
+  sudo ./scripts/05-development.sh
+  sudo ./scripts/05-development.sh --with-vscode
+  sudo ./scripts/05-development.sh --with-docker
+  sudo ./scripts/05-development.sh --with-vscode --with-docker
+EOF
 }
 
-# =========================
-# Comando com timeout e progresso
-# =========================
-run_with_progress() {
-    local message="$1"
-    local command="$2"
-    local timeout_seconds="${3:-300}"
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --with-vscode)
+            WITH_VSCODE="true"
+            ;;
+        --with-docker)
+            WITH_DOCKER="true"
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        *)
+            die "Opcao invalida: $1"
+            ;;
+    esac
+    shift
+done
 
-    print_step "$message"
-    timeout "$timeout_seconds" bash -c "$command" > /tmp/script_output 2>&1 & 
-    local cmd_pid=$!
-    spinner $cmd_pid
-    wait $cmd_pid
-    local exit_code=$?
+SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
 
-    if [ $exit_code -eq 0 ]; then
-        print_success "Concluído"
-        rm -f /tmp/script_output
-        return 0
-    elif [ $exit_code -eq 124 ]; then
-        print_error "Timeout após ${timeout_seconds}s"
-        return 1
-    else
-        print_error "Falhou (código: $exit_code)"
-        [ -f /tmp/script_output ] && echo -e "${YELLOW}Últimas linhas do erro:${NC}" && tail -5 /tmp/script_output
-        return 1
+common_init "05-development"
+show_banner "Instalador de ferramentas de desenvolvimento"
+
+print_header "Validacao do ambiente"
+require_root
+require_debian_13
+
+print_info "Base padrao do modulo: pacotes do proprio Debian 13."
+print_info "VS Code e Docker entram apenas por opt-in explicito."
+
+declare -a development_packages=(
+    build-essential
+    curl
+    git
+    jq
+    nodejs
+    npm
+    pipx
+    python3-pip
+    python3-venv
+    shellcheck
+    vim
+    wget
+)
+
+print_header "Pacotes base selecionados"
+printf ' - %s\n' "${development_packages[@]}"
+
+install_packages "${development_packages[@]}"
+
+if [[ "${WITH_VSCODE}" == "true" ]]; then
+    print_header "VS Code"
+    install_packages apt-transport-https gpg wget
+
+    tmp_key="${MODULE_TMP_DIR}/microsoft.gpg"
+    run_cmd "Baixando chave do VS Code" bash -lc "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > '${tmp_key}'"
+    install -D -o root -g root -m 0644 "${tmp_key}" /usr/share/keyrings/microsoft.gpg
+
+    cat > /etc/apt/sources.list.d/vscode.sources <<'EOF'
+Types: deb
+URIs: https://packages.microsoft.com/repos/code
+Suites: stable
+Components: main
+Architectures: amd64 arm64 armhf
+Signed-By: /usr/share/keyrings/microsoft.gpg
+EOF
+
+    mark_apt_sources_changed
+    install_packages code
+fi
+
+if [[ "${WITH_DOCKER}" == "true" ]]; then
+    print_header "Docker"
+    if [[ -n "$(get_virtualization_type)" ]]; then
+        die "Docker nao e instalado automaticamente em container por este modulo."
     fi
-}
 
-# =========================
-# Banner inicial
-# =========================
-clear
-echo -e "${CYAN}${BOLD}"
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    DEBIAN POST-INSTALL                       ║"
-echo "║           Instalador de Ferramentas de Desenvolvimento       ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
+    print_warning "O Docker altera o comportamento de rede e exige atencao especial com firewall."
+    print_warning "A documentacao oficial recomenda revisar o impacto em iptables/DOCKER-USER antes de expor portas."
 
-# =========================
-# Verificações Iniciais
-# =========================
-print_header "VERIFICAÇÃO DE PRÉ-REQUISITOS"
+    install_packages ca-certificates curl
+    run_cmd "Removendo pacotes Docker conflitantes" bash -lc "apt-get remove -y docker.io docker-compose docker-doc podman-docker containerd runc || true"
+    install -m 0755 -d /etc/apt/keyrings
+    run_cmd "Baixando chave oficial do Docker" curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
 
-if [ "$EUID" -ne 0 ]; then
-    print_error "Este script precisa ser executado como root."
-    exit 1
-fi
-print_success "Executando como root"
+    cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "${VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
 
-# =========================
-# Instalação
-# =========================
-print_header "INSTALAÇÃO DE FERRAMENTAS DE DESENVOLVIMENTO"
+    mark_apt_sources_changed
+    install_packages docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Dependências para adicionar repositórios
-run_with_progress "Instalando dependências (curl, gpg)" "apt update && apt install -y curl gpg"
-
-# --- Node.js (via NodeSource) ---
-print_info "Configurando Node.js..."
-if ! command -v node >/dev/null 2>&1; then
-    run_with_progress "Adicionando repositório NodeSource" "curl -fsSL https://deb.nodesource.com/setup_20.x | bash -"
-    run_with_progress "Instalando Node.js" "apt install -y nodejs"
-else
-    print_warning "Node.js já está instalado"
+    if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
+        run_cmd "Adicionando ${SUDO_USER} ao grupo docker" usermod -aG docker "${SUDO_USER}"
+        print_warning "O usuario ${SUDO_USER} precisa encerrar a sessao e entrar novamente para usar o grupo docker."
+    else
+        print_warning "Nenhum usuario nao-root foi identificado via sudo. Adicione manualmente quem deve usar Docker."
+    fi
 fi
 
-# --- Visual Studio Code ---
-print_info "Configurando Visual Studio Code..."
-if ! command -v code >/dev/null 2>&1; then
-    run_with_progress "Adicionando chave GPG da Microsoft" "curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/packages.microsoft.gpg"
-    run_with_progress "Adicionando repositório VSCode" 'echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
-    run_with_progress "Instalando VSCode" "apt update && apt install -y code"
-else
-    print_warning "Visual Studio Code já está instalado"
-fi
-
-# --- Docker ---
-print_info "Configurando Docker..."
-if ! command -v docker >/dev/null 2>&1; then
-    run_with_progress "Adicionando chave GPG do Docker" "install -m 0755 -d /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && chmod a+r /etc/apt/keyrings/docker.gpg"
-    run_with_progress "Adicionando repositório Docker" 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list'
-    run_with_progress "Instalando Docker Engine" "apt update && apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
-    print_step "Adicionando usuário atual ao grupo docker (necessário logout/login)"
-    # Adiciona o usuário que invocou sudo, ou o usuário logado
-    REAL_USER=${SUDO_USER:-$(logname)}
-    usermod -aG docker "$REAL_USER"
-    print_success "Usuário $REAL_USER adicionado ao grupo docker."
-else
-    print_warning "Docker já está instalado"
-fi
-
-# =========================
-# Conclusão
-# =========================
-print_header "CONFIGURAÇÃO CONCLUÍDA"
-echo -e "🎉 ${GREEN}${BOLD}Ferramentas de desenvolvimento instaladas!${NC}"
-echo ""
-echo -e "${YELLOW}Para que as permissões do Docker funcionem, você precisa fazer logout e login novamente.${NC}"
-echo ""
+print_header "Concluido"
+print_success "Modulo de desenvolvimento concluido."
+print_info "Log salvo em ${MODULE_LOG}"
