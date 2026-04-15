@@ -59,6 +59,7 @@ sudo ./install.sh --full --drivers
 
 ## Notes
 
+- The current interactive flow is a text menu. There is no dedicated graphical interface.
 - Driver installation is intended for bare metal and is blocked in containers.
 - Docker setup is opt-in because it changes networking behavior and adds an external repository.
 - The project now uses `CHANGELOG.md` to record relevant changes.

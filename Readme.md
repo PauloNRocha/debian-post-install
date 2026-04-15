@@ -151,7 +151,7 @@ O modulo de Docker segue o repositorio oficial do fornecedor. Isso foi mantido, 
 ## Limitacoes atuais
 
 - `02-drivers.sh` foi pensado para bare metal. Em container e recusado.
-- O projeto nao cria interface grafica nem menu interativo.
+- O menu interativo atual e textual. Ainda nao existe interface grafica dedicada.
 - Ainda nao existe suite automatica de testes.
 
 ## Referencias tecnicas

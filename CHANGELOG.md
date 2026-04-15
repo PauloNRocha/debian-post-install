@@ -21,6 +21,10 @@
 - Menu principal enriquecido com descricoes curtas por opcao.
 - Todos os scripts revisados com `shellcheck`.
 - `01-repositories.sh` e `02-drivers.sh` ajustados para aceitar Debian 13 com `deb822` e tambem com `sources.list` classico.
+- `05-development.sh` corrigido para carregar `common.sh` antes do parser de argumentos.
+- Fluxo `--with-docker` corrigido no `05-development.sh`, sem depender do bloco do VS Code.
+- Dependencia legada `apt-transport-https` removida do fluxo do VS Code.
+- README principal e README em ingles ajustados para refletir o menu interativo textual.
 
 ### Removido
 

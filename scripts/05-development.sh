@@ -2,6 +2,10 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../lib/common.sh"
+
 WITH_VSCODE="false"
 WITH_DOCKER="false"
 
@@ -34,16 +38,14 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck disable=SC1091
-source "${SCRIPT_DIR}/../lib/common.sh"
-
 common_init "05-development"
 show_banner "Instalador de Ferramentas de Desenvolvimento"
 
 print_header "VERIFICAÇÃO DE PRÉ-REQUISITOS"
 require_root
 require_debian_13
+
+DEBIAN_CODENAME="${VERSION_CODENAME:-trixie}"
 
 print_info "Base padrao do modulo: pacotes do proprio Debian 13."
 print_info "VS Code e Docker entram apenas por opt-in explicito."
@@ -70,14 +72,11 @@ install_packages "${development_packages[@]}"
 
 if [[ "${WITH_VSCODE}" == "true" ]]; then
     print_header "VISUAL STUDIO CODE"
-    install_packages apt-transport-https gpg wget
+    install_packages gpg wget
 
     tmp_key="${MODULE_TMP_DIR}/microsoft.gpg"
     run_cmd "Baixando chave do VS Code" bash -lc "wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > '${tmp_key}'"
     install -D -o root -g root -m 0644 "${tmp_key}" /usr/share/keyrings/microsoft.gpg
-
-    # shellcheck disable=SC1091
-    docker_suite="$(. /etc/os-release && printf '%s' "${VERSION_CODENAME}")"
 
     cat > /etc/apt/sources.list.d/vscode.sources <<'EOF'
 Types: deb
@@ -110,7 +109,7 @@ if [[ "${WITH_DOCKER}" == "true" ]]; then
     cat > /etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/debian
-Suites: ${docker_suite}
+Suites: ${DEBIAN_CODENAME}
 Components: stable
 Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/docker.asc
