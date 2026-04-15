@@ -58,11 +58,18 @@ Full run including drivers:
 sudo ./install.sh --full --drivers
 ```
 
+Full simulation without changing the system:
+
+```bash
+sudo ./install.sh --dry-run --full --drivers --with-docker --with-vscode
+```
+
 ## Notes
 
 - The current interactive flow is a text menu. There is no dedicated graphical interface.
 - Driver installation is intended for bare metal and is blocked in containers.
 - Docker setup is opt-in because it changes networking behavior and adds an external repository.
+- Sensitive modules now require explicit confirmation before changing repositories or installing Docker, VS Code, drivers, or firmware.
 - The project now uses `CHANGELOG.md` to record relevant changes.
 
 ## Technical references

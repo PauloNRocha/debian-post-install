@@ -97,6 +97,10 @@ fi
 print_header "PACOTES SELECIONADOS"
 printf ' - %s\n' "${reasons[@]}"
 
+if ! confirm_action "Instalar os drivers e firmwares detectados?"; then
+    die "Operação cancelada pelo usuário."
+fi
+
 install_packages "${packages[@]}"
 
 print_header "Concluido"

@@ -91,6 +91,12 @@ Listar os modulos suportados:
 ./install.sh --list
 ```
 
+Simular uma execucao completa sem alterar o sistema:
+
+```bash
+sudo ./install.sh --dry-run --full --drivers --with-docker --with-vscode
+```
+
 ## Opcoes do install.sh
 
 - `--repositories`
@@ -107,6 +113,8 @@ Listar os modulos suportados:
   - Habilita o repositorio oficial do VS Code dentro do modulo de desenvolvimento.
 - `--with-docker`
   - Habilita o repositorio oficial do Docker dentro do modulo de desenvolvimento.
+- `--dry-run`
+  - Simula a execucao e mostra os comandos sem alterar o sistema.
 - `--list`
 - `--help`
 
@@ -153,6 +161,7 @@ O modulo de Docker segue o repositorio oficial do fornecedor. Isso foi mantido, 
 
 - `02-drivers.sh` foi pensado para bare metal. Em container e recusado.
 - O menu interativo atual e textual. Ainda nao existe interface grafica dedicada.
+- Modulos sensiveis pedem confirmacao explicita antes de alterar repositórios ou instalar Docker, VS Code, drivers e firmware.
 - Ainda nao existe suite automatica de testes.
 
 ## Referencias tecnicas

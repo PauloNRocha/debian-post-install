@@ -7,6 +7,8 @@ DEBIAN_POST_INSTALL_COMMON_LOADED=1
 
 LOG_BASE_DIR="/var/log/debian-post-install"
 TMP_BASE_DIR="/tmp/debian-post-install"
+DRY_RUN="${DEBIAN_POST_INSTALL_DRY_RUN:-false}"
+ASSUME_YES="${DEBIAN_POST_INSTALL_ASSUME_YES:-false}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -48,9 +50,16 @@ show_banner() {
 common_init() {
     MODULE_NAME="$1"
     RUN_TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "${LOG_BASE_DIR}" "${TMP_BASE_DIR}"
+    mkdir -p "${TMP_BASE_DIR}"
+    mkdir -p "${LOG_BASE_DIR}" 2>/dev/null || true
+    if [[ -d "${LOG_BASE_DIR}" && -w "${LOG_BASE_DIR}" ]]; then
+        EFFECTIVE_LOG_BASE_DIR="${LOG_BASE_DIR}"
+    else
+        EFFECTIVE_LOG_BASE_DIR="${TMP_BASE_DIR}/logs"
+        mkdir -p "${EFFECTIVE_LOG_BASE_DIR}"
+    fi
     MODULE_TMP_DIR="$(mktemp -d "${TMP_BASE_DIR}/${MODULE_NAME}.XXXXXX")"
-    MODULE_LOG="${LOG_BASE_DIR}/${RUN_TIMESTAMP}-${MODULE_NAME}.log"
+    MODULE_LOG="${EFFECTIVE_LOG_BASE_DIR}/${RUN_TIMESTAMP}-${MODULE_NAME}.log"
     touch "${MODULE_LOG}"
     trap common_cleanup EXIT
 }
@@ -68,6 +77,50 @@ die() {
 
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+bool_is_true() {
+    [[ "${1:-false}" == "true" ]]
+}
+
+is_interactive_tty() {
+    [[ -t 0 && -t 1 ]]
+}
+
+format_command() {
+    local formatted=""
+    local arg
+
+    for arg in "$@"; do
+        if [[ -n "${formatted}" ]]; then
+            formatted+=" "
+        fi
+        printf -v arg '%q' "${arg}"
+        formatted+="${arg}"
+    done
+
+    printf '%s\n' "${formatted}"
+}
+
+confirm_action() {
+    local prompt="$1"
+    local answer
+
+    if bool_is_true "${DRY_RUN}"; then
+        print_warning "Dry-run ativo: confirmação ignorada para '${prompt}'."
+        return 0
+    fi
+
+    if bool_is_true "${ASSUME_YES}"; then
+        return 0
+    fi
+
+    if ! is_interactive_tty; then
+        die "Ação sensível requer confirmação interativa: ${prompt}"
+    fi
+
+    read -rp "${prompt} [s/N]: " answer
+    [[ "${answer}" =~ ^[Ss]$ ]]
 }
 
 spinner() {
@@ -89,9 +142,20 @@ run_cmd() {
     local message="$1"
     shift
     local timeout_seconds="${RUN_CMD_TIMEOUT:-600}"
+    local command_text
+
+    command_text="$(format_command "$@")"
 
     local output_file="${MODULE_TMP_DIR}/last-command.log"
     print_step "${message}"
+
+    if bool_is_true "${DRY_RUN}"; then
+        echo "[dry-run] ${message}" >> "${MODULE_LOG}"
+        echo "[dry-run] ${command_text}" >> "${MODULE_LOG}"
+        print_info "[dry-run] ${command_text}"
+        print_success "Simulado"
+        return 0
+    fi
 
     timeout "${timeout_seconds}" "$@" >"${output_file}" 2>&1 &
     local cmd_pid=$!
@@ -122,6 +186,10 @@ run_cmd() {
 require_root() {
     print_step "Verificando privilégios de root..."
     if [[ "${EUID}" -ne 0 ]]; then
+        if bool_is_true "${DRY_RUN}"; then
+            print_warning "Dry-run sem root: verificacao de privilégio relaxada para simulacao."
+            return 0
+        fi
         die "Este script precisa ser executado como root."
     fi
     print_success "Executando como root"
@@ -197,6 +265,13 @@ install_packages() {
 backup_file() {
     local source_file="$1"
     local backup_file="${source_file}.${RUN_TIMESTAMP}.bak"
+
+    if bool_is_true "${DRY_RUN}"; then
+        echo "[dry-run] backup ${source_file} -> ${backup_file}" >> "${MODULE_LOG}"
+        printf '%s\n' "${backup_file}"
+        return 0
+    fi
+
     cp -a "${source_file}" "${backup_file}"
     printf '%s\n' "${backup_file}"
 }

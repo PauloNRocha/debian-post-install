@@ -27,6 +27,8 @@
 - README principal e README em ingles ajustados para refletir o menu interativo textual.
 - `01-repositories.sh` endurecido para validar `Components:` por tokens exatos no `deb822`.
 - `01-repositories.sh` ajustado para reescrever linhas `deb` e `deb-src` no layout classico.
+- `install.sh` ganhou suporte a `--dry-run` e resumo final mais informativo.
+- `01-repositories.sh`, `02-drivers.sh` e `05-development.sh` passaram a pedir confirmacao explicita em operacoes sensiveis.
 
 ### Removido
 

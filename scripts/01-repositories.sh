@@ -189,8 +189,17 @@ fi
 if cmp -s "${SOURCE_FILE}" "${temporary_source}"; then
     print_warning "Os componentes ja estavam configurados como: ${TARGET_COMPONENTS}"
 else
-    install -m 0644 "${temporary_source}" "${SOURCE_FILE}"
-    print_success "Arquivo ${SOURCE_FILE} atualizado."
+    if confirm_action "Aplicar alterações de repositórios em ${SOURCE_FILE}?"; then
+        if bool_is_true "${DRY_RUN}"; then
+            print_info "[dry-run] install -m 0644 ${temporary_source} ${SOURCE_FILE}"
+            print_success "Simulado"
+        else
+            install -m 0644 "${temporary_source}" "${SOURCE_FILE}"
+            print_success "Arquivo ${SOURCE_FILE} atualizado."
+        fi
+    else
+        die "Operação cancelada pelo usuário."
+    fi
 fi
 
 ensure_apt_updated

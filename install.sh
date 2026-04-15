@@ -8,6 +8,7 @@ source "${ROOT_DIR}/lib/common.sh"
 
 declare -a modules=()
 declare -a development_args=()
+DRY_RUN="false"
 
 usage() {
     cat <<'EOF'
@@ -15,6 +16,7 @@ Uso:
   ./install.sh
   ./install.sh --list
   sudo ./install.sh --repositories
+  sudo ./install.sh --dry-run --repositories
   sudo ./install.sh --desktop
   sudo ./install.sh --development --with-vscode
   sudo ./install.sh --full --drivers --with-docker
@@ -34,6 +36,7 @@ Perfis:
 Opcoes auxiliares:
   --with-vscode
   --with-docker
+  --dry-run
   --list
   --help
 EOF
@@ -199,7 +202,7 @@ run_module() {
     local script_path="${ROOT_DIR}/scripts/${module}"
 
     print_header "EXECUTANDO ${module}"
-    bash "${script_path}" "$@"
+    DEBIAN_POST_INSTALL_DRY_RUN="${DRY_RUN}" bash "${script_path}" "$@"
 }
 
 parse_args() {
@@ -244,6 +247,9 @@ parse_args() {
                 add_module "05-development.sh"
                 development_args+=("--with-docker")
                 ;;
+            --dry-run)
+                DRY_RUN="true"
+                ;;
             --list)
                 list_modules
                 exit 0
@@ -279,6 +285,12 @@ print_header "RESUMO DA EXECUÇÃO"
 require_root
 require_debian_13
 
+if [[ "${DRY_RUN}" == "true" ]]; then
+    print_warning "Modo dry-run ativo. Nenhuma alteração será aplicada."
+else
+    print_info "Modo de execução: alterações reais habilitadas."
+fi
+
 echo "Módulos selecionados:"
 printf ' - %s\n' "${modules[@]}"
 if [[ "${#development_args[@]}" -gt 0 ]]; then
@@ -297,3 +309,12 @@ done
 
 print_header "EXECUÇÃO CONCLUÍDA"
 print_success "Todos os módulos selecionados foram processados."
+if [[ "${DRY_RUN}" == "true" ]]; then
+    print_info "Resultado: somente simulação. Nenhum arquivo, pacote ou repositório foi alterado."
+else
+    print_info "Resultado: alterações aplicadas conforme os módulos selecionados."
+fi
+print_info "Logs dos módulos ficam em ${LOG_BASE_DIR}/"
+if printf '%s\n' "${modules[@]}" | grep -q '^02-drivers.sh$'; then
+    print_warning "Como o módulo de drivers foi selecionado, reiniciar o sistema pode ser necessário."
+fi

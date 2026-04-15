@@ -72,6 +72,10 @@ install_packages "${development_packages[@]}"
 
 if [[ "${WITH_VSCODE}" == "true" ]]; then
     print_header "VISUAL STUDIO CODE"
+    if ! confirm_action "Adicionar o repositório oficial do VS Code e instalar o pacote?"; then
+        die "Operação cancelada pelo usuário."
+    fi
+
     install_packages gpg wget
 
     tmp_key="${MODULE_TMP_DIR}/microsoft.gpg"
@@ -99,6 +103,9 @@ if [[ "${WITH_DOCKER}" == "true" ]]; then
 
     print_warning "O Docker altera o comportamento de rede e exige atencao especial com firewall."
     print_warning "A documentacao oficial recomenda revisar o impacto em iptables/DOCKER-USER antes de expor portas."
+    if ! confirm_action "Adicionar o repositório oficial do Docker e instalar o Docker Engine?"; then
+        die "Operação cancelada pelo usuário."
+    fi
 
     install_packages ca-certificates curl
     run_cmd "Removendo pacotes Docker conflitantes" bash -lc "apt-get remove -y docker.io docker-compose docker-doc podman-docker containerd runc || true"
